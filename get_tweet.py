@@ -1,6 +1,5 @@
 import tweepy
 import pandas as pd
-import datetime
 import os
 
 CONSUMER_KEY = os.getenv('CONSUMER_KEY')
@@ -11,22 +10,26 @@ ACCESS_TOKEN_SECRET = os.getenv('ACCESS_TOKEN_SECRET')
 #tweepyの設定
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
-api = tweepy.API(auth)
+api = tweepy.API(auth, wait_on_rate_limit=True)
 
 columns_name=["TW_NO","TW_TIME","TW_TEXT","RT","FAV"]
 
 #ここで取得したいツイッターアカウントIDを指定する
 tw_id="Taka_input"
 
-#ツイート取得
-def get_tweets():
-    tweet_data = []
+# 検索文字
+search_word = '@' + tw_id + 'exclude:retweets'
+print('検索単語:', search_word)
 
-    for tweet in tweepy.Cursor(api.user_timeline,screen_name = tw_id,exclude_replies = True).items():
-        tweet_data.append([tweet.id,tweet.created_at,tweet.created_at+datetime.timedelta(hours=9),tweet.text.replace('\n',''),tweet.favorite_count,tweet.retweet_count])
+tweets = tweepy.Cursor(api.user_timeline, count=200, \
+                       user_id=tw_id, \
+                       include_rts=False, \
+                       exclude_replies = False,\
+                       lang='ja').items()
 
-    df = pd.DataFrame(tweet_data,columns=columns_name)
-    df.to_excel('tw_%s.xlsx'%tw_id, sheet_name='Sheet1')
-    print("end")
+for tweet in enumerate(tweets):
+    print('=================')
+    print(tweet.text)
+    print('date:', tweet.created_at)
 
-get_tweets()
+

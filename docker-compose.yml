@@ -13,6 +13,20 @@ services:
     networks:
       - app-tier
 
+  get_tweet:
+    container_name: getter
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/work
+    entrypoint:
+      - python
+      - get_tweet.py
+    env_file: .env
+    networks:
+      - app-tier
+
 networks:
   app-tier:
     driver: bridge

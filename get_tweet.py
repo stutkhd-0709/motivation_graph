@@ -1,6 +1,7 @@
 import tweepy
 import pandas as pd
 import os
+from datetime import timedelta
 
 CONSUMER_KEY = os.getenv('CONSUMER_KEY')
 CONSUMER_SECRET = os.getenv('CONSUMER_SECRET')
@@ -18,18 +19,28 @@ columns_name=["TW_NO","TW_TIME","TW_TEXT","RT","FAV"]
 tw_id="Taka_input"
 
 # 検索文字
-search_word = '@' + tw_id + 'exclude:retweets'
-print('検索単語:', search_word)
+search_word = 'tweet_id:@' + tw_id + ' exclude:retweets exclude:replies'
+print('Searching:', search_word)
 
 tweets = tweepy.Cursor(api.user_timeline, count=200, \
                        user_id=tw_id, \
                        include_rts=False, \
-                       exclude_replies = False,\
+                       exclude_replies = True,\
                        lang='ja').items()
 
-for tweet in enumerate(tweets):
-    print('=================')
-    print(tweet.text)
-    print('date:', tweet.created_at)
+tweets_list, created_time_list = [], []
+c = 0
+for i, tw in enumerate(tweets): # tweetsはgenerator
+    if tw.entities['urls']: # urlがある場合は除く(共有ツイートが多いため) 画像は含まれない
+        continue
+    tweets_list.append(tw.text)
+    created_at = tw.created_at + timedelta(hours=9)
+    created_time_list.append(created_at)
+    if i % 500 == 0:
+        print(f'{i} Tweets Done')
+    c = i
+print(f'Total {c} Tweets')
 
-
+df = pd.DataFrame(data={'text':tweets_list, 'created_at':created_time_list})
+df.to_csv('data/tweet.csv')
+print('Successfully saved tweet.csv')

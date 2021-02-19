@@ -8,4 +8,4 @@ RUN git clone https://github.com/Jefferson-Henrique/GetOldTweets-python \
     && rm -rf GetOldTweets-python
 
 RUN pip install --upgrade pip \
-    && pip install requests_oauthlib pyquery
+    && pip install requests_oauthlib pyquery tweepy pandas

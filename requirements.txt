@@ -1,0 +1,6 @@
+requests_oauthlib
+pyquery
+tweepy
+pandas
+mecab-python3==0.7
+oseti

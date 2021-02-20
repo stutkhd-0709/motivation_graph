@@ -1,7 +1,8 @@
 import tweepy
 import pandas as pd
 import os
-from datetime import timedelta
+from datetime import datetime, date, timedelta
+from dateutil.relativedelta import relativedelta
 
 CONSUMER_KEY = os.getenv('CONSUMER_KEY')
 CONSUMER_SECRET = os.getenv('CONSUMER_SECRET')
@@ -28,19 +29,25 @@ tweets = tweepy.Cursor(api.user_timeline, count=200, \
                        exclude_replies = True,\
                        lang='ja').items()
 
-tweets_list, created_time_list = [], []
 c = 0
-for i, tw in enumerate(tweets): # tweetsはgenerator
-    if tw.entities['urls']: # urlがある場合は除く(共有ツイートが多いため) 画像は含まれない
-        continue
-    tweets_list.append(tw.text)
+tweets_list, created_time_list = [], []
+until = datetime.now()
+since = until - relativedelta(years=1)
+for tw in tweets: # tweetsはgenerator
     created_at = tw.created_at + timedelta(hours=9)
+    # 1年間のデータだけ取得
+    if created_at < since:
+        break
+    # urlがある場合は除く(共有ツイートが多いため) 画像は含まれない
+    if tw.entities['urls']:
+        continue
     created_time_list.append(created_at)
-    if i % 500 == 0:
-        print(f'{i} Tweets Done')
-    c = i
+    tweets_list.append(tw.text)
+    if c % 100 == 0:
+        print(f'{c} Tweets Done')
+    c += 1
 print(f'Total {c} Tweets')
 
 df = pd.DataFrame(data={'text':tweets_list, 'created_at':created_time_list})
-df.to_csv('data/tweet.csv')
+df.to_csv('data/tweet.csv', index=False)
 print('Successfully saved tweet.csv')

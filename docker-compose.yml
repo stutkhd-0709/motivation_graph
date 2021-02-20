@@ -22,8 +22,22 @@ services:
       - .:/work
     entrypoint:
       - python
-      - get_tweet.py
+      - utils/get_tweet.py
     env_file: .env
+    networks:
+      - app-tier
+
+  app:
+    container_name: motivation_app
+    build:
+      context: .
+      dockerfile: Dockerfile.st
+    volumes:
+      - .:/streamlit-docker
+    tty: True
+    env_file: .env
+    ports:
+      - '8501:8501'
     networks:
       - app-tier
 

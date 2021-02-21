@@ -6,3 +6,7 @@ requests_oauthlib
 pyquery
 tweepy
 oseti
+
+scikit-learn==0.23.0
+janome == 0.3.7
+asari

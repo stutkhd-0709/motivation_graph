@@ -15,7 +15,7 @@ if tw_id == '':
     st.warning("Input Tweeter ID")
     st.stop()
 
-@st.cache()
+@st.cache(allow_output_mutation=True)
 def create_motive_df(tw_id):
     get_tweet.create_tw_csv(tw_id)
     df = pd.read_csv('data/tweet.csv', encoding='utf8')
@@ -23,6 +23,31 @@ def create_motive_df(tw_id):
     return df, motivation_df
 
 df, motivation_df = create_motive_df(tw_id)
+
+@st.cache()
+def change_df(df, motivation_df):
+    # dfからその日のツイートを取得
+    count_df = pd.DataFrame({'Timestamp':df.index, 'tweet':df.text})
+    count_df['date'] = count_df['Timestamp'].apply(lambda x: '%d-%d-%d' % (x.year, x.month, x.day))
+    counter = count_df.groupby(['date']).size() # Series
+    date_list = list(map(lambda x: '%d-%d-%d' % (x.year, x.month, x.day), motivation_df.index.tolist()))
+    motivation_df['date'] = date_list
+    return counter, motivation_df
+
+counter, motivation_df = change_df(df, motivation_df)
+
+st.write('motivation_df')
+st.table(motivation_df.tail())
+for date, count in zip(counter.index,counter.values):
+    series = motivation_df[motivation_df.date==date]
+    score = series['score'].tolist()[0]
+    mean_score = score / count
+    index = motivation_df[motivation_df.date==date].index
+    motivation_df.at[index, 'score'] = mean_score
+
+st.write('motivation_df')
+st.table(motivation_df.tail())
+
 # 可視化
 x_coord = motivation_df.index.tolist()
 y_coord = motivation_df.score.values.tolist()

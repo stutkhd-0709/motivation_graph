@@ -12,7 +12,7 @@ def day_motivation_df(df):
     df['clean_text'] = df['text'].map(cleaning.normalize)
     df['score'] = df['clean_text'].map(motivation_score)
     # indexをdatetimeにする
-    df.index = pd.DatetimeIndex(pd.to_datetime(df['created_at'].map(lambda x: x[:10]), format="%Y-%m-%d"))
+    df.index = pd.DatetimeIndex(pd.to_datetime(df['created_at'].map(lambda x: x), format="%Y-%m-%d %H:%M:%S"))
     df.drop('created_at', axis=1, inplace=True)
 
     # resample : データ集計

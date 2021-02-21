@@ -43,7 +43,6 @@ def create_tw_csv(tw_id):
         df.to_csv('data/tweet.csv', index=False)
         print(f'Total {c} tweets')
         return 'Success'
-    
     except tweepy.error.TweepError as error:
         if '404' in str(error):
             return 'そのIDは存在しません'

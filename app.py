@@ -20,10 +20,12 @@ y_coord = motivation_df.score.values.tolist()
 
 trace0 = go.Scatter(x = x_coord, y = y_coord, mode = 'lines', name = 'X')
 
-layout = go.Layout(
-            title = dict(text = 'motivation graph for a year'),
-            xaxis = dict(title = 'date', type='date', dtick = 'M1'),  # dtick: 'M1'で１ヶ月ごとにラベル表示 
-            yaxis = dict(title = 'motivation score'))
+fig = go.Figure(data=trace0)
 
-fig = go.Figure(data=trace0, layout=layout)
+fig.update_layout(
+            title = dict(text = 'anual motivation graph'),
+            xaxis = dict(title = 'date', type='date', dtick = 'M1'),  # dtick: 'M1'で１ヶ月ごとにラベル表示
+            yaxis = dict(title = 'motivation score'),
+            )
+
 st.plotly_chart(fig)

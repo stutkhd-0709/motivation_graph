@@ -1,12 +1,11 @@
 import oseti
 import pandas as pd
-import round
 from . import cleaning
 
 def motivation_score(text):
     analyzer = oseti.Analyzer()
     score_list = analyzer.analyze(text)
-    return score_list[0]
+    return round(score_list[0], 4)
 
 def day_motivation_df(df):
     df['clean_text'] = df['text'].map(cleaning.format_text)

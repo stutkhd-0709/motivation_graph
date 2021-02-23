@@ -14,6 +14,15 @@ auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 api = tweepy.API(auth, wait_on_rate_limit=True)
 
+def datetime_format(date):
+    format ='%d-%d-%d' % (date.year, date.month, date.day)
+    return format
+
+def daterange(_start, _end):
+    for n in range((_end - _start).days):
+        datetime = _start + timedelta(n)
+        yield datetime_format(datetime)
+
 def create_tw_csv(tw_id):
     # tweet_idにすると自分のタイムラインしか取得できない
     tweets = tweepy.Cursor(api.user_timeline, count=200, \
@@ -40,6 +49,15 @@ def create_tw_csv(tw_id):
                 print(f'{c} Tweets Done')
             c += 1
         df = pd.DataFrame(data={'text':tweets_list, 'created_at':created_time_list})
+        df['date'] = df['created_at'].apply(lambda x: '%d-%d-%d' % (x.year, x.month, x.day))
+        # indexを補完する
+        lost_datetime = [] # datetime型
+        tweets_date = set(df.date.tolist()) # 時間はなし
+        for date in daterange(since, until):
+            if date not in tweets_date:
+                lost_datetime.append(pd.to_datetime(date))
+        tmp_df = pd.DataFrame(lost_datetime, columns=['date'])
+        df = pd.concat([df, tmp_df])
         df.to_csv('data/tweet.csv', index=False)
         print(f'Total {c} tweets')
         return 'Success'

@@ -4,8 +4,7 @@ import plotly.graph_objs as go
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-from utils import get_motivation, get_tweet
-
+from utils import get_motivation, get_tweet, cleaning
 
 st.title('Create Motivation Graph')
 
@@ -27,6 +26,7 @@ def create_motive_df(tw_id):
 
 # motivation_df : index:datetime(日付のみ時間は9:00), score(total)
 df, motivation_df = create_motive_df(tw_id)
+
 @st.cache(allow_output_mutation=True)
 def change_df(df, motivation_df):
     # # dfからその日のツイートを取得
@@ -41,18 +41,26 @@ def change_df(df, motivation_df):
 
 counter, motivation_df = change_df(df, motivation_df)
 
-# TODO: プロット範囲を指定
+# 可視化範囲指定
+until = datetime.now()
+week_ago = until - relativedelta(days=7)
+since = until - relativedelta(years=1)
+date_range = st.sidebar.date_input("date range of tweet", value=[week_ago, until],
+                  min_value=since, max_value=until)
+if len(date_range) < 2:
+    st.warning('Select 2 days from sidebar')
+    st.stop()
 
 # 可視化
-x_coord = motivation_df.index.tolist()
-y_coord = motivation_df.score.values.tolist()
+x_coord = motivation_df.loc[date_range[0]:date_range[1], :].index.tolist()
+y_coord = motivation_df.loc[date_range[0]:date_range[1], :].score.values.tolist()
 
 trace0 = go.Scatter(x = x_coord, y = y_coord, mode = 'lines', name = 'X')
 
 fig = go.Figure(data=trace0)
 
 fig.update_layout(
-            title = dict(text = 'Anual motivation graph'),
+            title = dict(text = 'motivation graph'),
             xaxis = dict(title = 'date', type='date', dtick = 'M1'),  # dtick: 'M1'で１ヶ月ごとにラベル表示
             yaxis = dict(title = 'motivation score'),
             width=1000,
@@ -61,7 +69,6 @@ fig.update_layout(
 
 st.plotly_chart(fig)
 
-# TODO:scoreごとに顔文字追加
 emoji_dict = {'painful':'😭', 'sad':'😢', 'pien': '🥺', 'usual':'😃', 'joy': '😁', 'exciting': '😆', 'happy':'✌😎✌️'}
 def sentiment_emoji(score):
     if -1 <= score < -0.7:
@@ -79,13 +86,12 @@ def sentiment_emoji(score):
     else:
         return emoji_dict['happy']
 
-until = datetime.now()
-since = until - relativedelta(years=1)
 # 選択した日付のテキストを表示
 d = st.sidebar.date_input('When Tweet',min_value=since, max_value=until)
 st.write(f'{d}のツイート')
 total = motivation_df[pd.to_datetime(motivation_df.date) == pd.to_datetime(d)].score.tolist()
-st.write(f'total_score:{round(total[0], 4)} {sentiment_emoji(total[0])}')
+st.write(f'Total_score:{round(total[0], 4)}')
+st.write(f'Status:  {sentiment_emoji(total[0])}')
 tweets = df[pd.to_datetime(df.index.date) == pd.to_datetime(d)]
 tweets = tweets.reset_index(drop=True)
 # ここのtextは前処理なしの文章(URLも含む)

@@ -1,4 +1,5 @@
 import oseti
+from asari.api import Sonar
 import pandas as pd
 from . import cleaning
 
@@ -8,13 +9,13 @@ def oseti_motivation_score(text):
     return round(score_list[0], 4)
 
 def asari_motivation_score(text_list):
-    from asari.api import Sonar
     sonar = Sonar()
-    # res = sonar.ping(text=text)
-    # label = res['top_class']
     A = list(map(sonar.ping, text_list))
     scores = []
     for res in A:
+        if res['text'] == ' ': #空白にもスコアが追加されてしまうため
+            scores.append(0)
+            continue
         label = res['top_class']
         if label == 'negative':
             index = 0
@@ -23,18 +24,13 @@ def asari_motivation_score(text_list):
             index = 1
             score = round(res['classes'][index]['confidence'], 4)
         scores.append(score)
-        print(res)
     return scores
 
 def day_motivation_df(df):
-    df['clean_text'] = df['text'].map(cleaning.format_text)
-    df['clean_text'] = df['text'].map(cleaning.normalize)
+    df['clean_text'] = df['text'].map(cleaning.format_text) #前後の値が違う
+    df['clean_text'] = df['clean_text'].map(cleaning.normalize)
     # df['score'] = df['clean_text'].map(oseti_motivation_score)
     text_list = asari_motivation_score(df['clean_text'].tolist())
     df['score'] = text_list
-    # indexをdatetimeにする
-    df.index = pd.DatetimeIndex(pd.to_datetime(df['created_at'].map(lambda x: x), format="%Y-%m-%d %H:%M:%S"))
-    df.drop('created_at', axis=1, inplace=True)
-    # resample : データ集計
-    df_1day = df.resample("1D").sum()
+    df_1day = df.resample("1D").mean()
     return df_1day

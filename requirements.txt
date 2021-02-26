@@ -4,3 +4,4 @@ tweepy
 pandas
 mecab-python3==0.7
 oseti
+emoji

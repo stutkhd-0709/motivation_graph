@@ -1,12 +1,18 @@
 import re
 import unicodedata
+import pandas as pd
+import emoji
 
 def format_text(text):
-    text = re.sub(r'https?://[\w/:%#\$&\?\(\)~\.=\+\-…]+', "", text)
-    text=re.sub(r'[!-~]', "", text)#半角記号,数字,英字
-    text=re.sub(r'[︰-＠]', "", text)#全角記号
-    text=re.sub('\n', " ", text)#改行文字
-
+    if pd.isnull(text):
+        text = ' '
+    else:
+        text = re.sub(r'https?://[\w/:%#\$&\?\(\)~\.=\+\-…]+', "", text)
+        text=re.sub(r'[!-~]', "", text)#半角記号,数字,英字
+        text=re.sub(r'[︰-＠]', "", text)#全角記号
+        text=re.sub('\n', " ", text)#改行文字
+        # 絵文字削除
+        text = ''.join(['' if c in emoji.UNICODE_EMOJI['en'] else c for c in list(text)])
     return text
 
 def normalize(text):

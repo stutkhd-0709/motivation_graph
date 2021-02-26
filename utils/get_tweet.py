@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
+from . import cleaning
 
 CONSUMER_KEY = os.getenv('CONSUMER_KEY')
 CONSUMER_SECRET = os.getenv('CONSUMER_SECRET')
@@ -14,14 +15,10 @@ auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 api = tweepy.API(auth, wait_on_rate_limit=True)
 
-def datetime_format(date):
-    format ='%d-%d-%d' % (date.year, date.month, date.day)
-    return format
-
 def daterange(_start, _end):
     for n in range((_end - _start).days):
         datetime = _start + timedelta(n)
-        yield datetime_format(datetime)
+        yield cleaning.date_format(datetime)
 
 def create_tw_csv(tw_id):
     # tweet_idにすると自分のタイムラインしか取得できない
@@ -49,7 +46,7 @@ def create_tw_csv(tw_id):
                 print(f'{c} Tweets Done')
             c += 1
         df = pd.DataFrame(data={'text':tweets_list, 'created_at':created_time_list})
-        df['date'] = df['created_at'].apply(datetime_format)
+        df['date'] = df['created_at'].apply(cleaning.date_format)
         # indexを補完する
         lost_datetime = [] # datetime型
         tweets_date = set(df.date.tolist()) # 時間はなし
@@ -57,7 +54,7 @@ def create_tw_csv(tw_id):
             if date not in tweets_date:
                 lost_datetime.append(pd.to_datetime(date))
         tmp_df = pd.DataFrame(lost_datetime, columns=['created_at'])
-        tmp_df['date'] = tmp_df['created_at'].apply(datetime_format)
+        tmp_df['date'] = tmp_df['created_at'].apply(cleaning.date_format)
         df = pd.concat([df, tmp_df])
         df = df.sort_values('created_at')
         df.to_csv('data/tweet.csv', index=False)

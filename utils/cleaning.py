@@ -20,3 +20,10 @@ def normalize(text):
     text = unicodedata.normalize('NFKC', text)
 
     return text
+
+def date_format(date):
+    format ='%d-%d-%d' % (date.year, date.month, date.day)
+    return format
+
+x_coood = motivation_df.loc[date_range[0]:date_range[1], :].index.tolist()
+y_coord = motivation_df.loc[date_range[0]:date_range[1], ['score']]values.tolist()

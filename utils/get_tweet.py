@@ -49,15 +49,17 @@ def create_tw_csv(tw_id):
                 print(f'{c} Tweets Done')
             c += 1
         df = pd.DataFrame(data={'text':tweets_list, 'created_at':created_time_list})
-        df['date'] = df['created_at'].apply(lambda x: '%d-%d-%d' % (x.year, x.month, x.day))
+        df['date'] = df['created_at'].apply(datetime_format)
         # indexを補完する
         lost_datetime = [] # datetime型
         tweets_date = set(df.date.tolist()) # 時間はなし
         for date in daterange(since, until):
             if date not in tweets_date:
                 lost_datetime.append(pd.to_datetime(date))
-        tmp_df = pd.DataFrame(lost_datetime, columns=['date'])
+        tmp_df = pd.DataFrame(lost_datetime, columns=['created_at'])
+        tmp_df['date'] = tmp_df['created_at'].apply(datetime_format)
         df = pd.concat([df, tmp_df])
+        df = df.sort_values('created_at')
         df.to_csv('data/tweet.csv', index=False)
         print(f'Total {c} tweets')
         return 'Success'

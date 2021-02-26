@@ -41,6 +41,8 @@ def change_df(df, motivation_df):
 
 counter, motivation_df = change_df(df, motivation_df)
 
+# TODO: プロット範囲を指定
+
 # 可視化
 x_coord = motivation_df.index.tolist()
 y_coord = motivation_df.score.values.tolist()
@@ -59,15 +61,31 @@ fig.update_layout(
 
 st.plotly_chart(fig)
 
+# TODO:scoreごとに顔文字追加
+emoji_dict = {'painful':'😭', 'sad':'😢', 'pien': '🥺', 'usual':'😃', 'joy': '😁', 'exciting': '😆', 'happy':'✌😎✌️'}
+def sentiment_emoji(score):
+    if -1 <= score < -0.7:
+        return emoji_dict['painful']
+    elif -0.7 <= score < -0.4:
+        return emoji_dict['sad']
+    elif -0.4 <= score < -0.2:
+        return emoji_dict['pien']
+    elif -0.2 <= score < 0.2:
+        return emoji_dict['usual']
+    elif 0.2 <= score < 0.4:
+        return emoji_dict['joy']
+    elif 0.4 <= score < 0.7:
+        return emoji_dict['exciting']
+    else:
+        return emoji_dict['happy']
+
 until = datetime.now()
 since = until - relativedelta(years=1)
 # 選択した日付のテキストを表示
 d = st.sidebar.date_input('When Tweet',min_value=since, max_value=until)
 st.write(f'{d}のツイート')
 total = motivation_df[pd.to_datetime(motivation_df.date) == pd.to_datetime(d)].score.tolist()
-st.write('total_score:',round(total[0], 4))
-# TODO:scoreごとに顔文字追加
-
+st.write(f'total_score:{round(total[0], 4)} {sentiment_emoji(total[0])}')
 tweets = df[pd.to_datetime(df.index.date) == pd.to_datetime(d)]
 tweets = tweets.reset_index(drop=True)
 # ここのtextは前処理なしの文章(URLも含む)

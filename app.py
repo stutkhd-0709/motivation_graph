@@ -66,7 +66,6 @@ x_coord = motivation_df.loc[date_range[0]:date_range[1], :].index.tolist()
 y_coord = motivation_df.loc[date_range[0]:date_range[1], :].score.values.tolist()
 
 trace0 = go.Scatter(x = x_coord, y = y_coord, mode = 'lines + markers', name = 'X')
-# layout = go.Layout(yaxis=dict(range=[-1,1]), tickformat="%Y-%m-%d")
 
 fig = go.Figure(data=trace0)
 

@@ -21,6 +21,8 @@ def daterange(_start, _end):
         yield cleaning.date_format(datetime)
 
 def create_tw_csv(tw_id):
+    if not os.path.exists('data'):
+        os.mkdir('data')
     # tweet_idにすると自分のタイムラインしか取得できない
     tweets = tweepy.Cursor(api.user_timeline, count=200, \
                        screen_name=tw_id, \

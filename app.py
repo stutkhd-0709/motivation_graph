@@ -28,7 +28,7 @@ def create_motive_df(tw_id):
 df, motivation_df = create_motive_df(tw_id)
 
 @st.cache(allow_output_mutation=True)
-def change_df(df, motivation_df):
+def create_counter(df, motivation_df):
     # # dfからその日のツイートを取得
     count_df = pd.DataFrame({'Timestamp':df.index, 'tweet':df.text})
     count_df['date'] = count_df['Timestamp'].apply(lambda x: '%d-%d-%d' % (x.year, x.month, x.day))
@@ -39,30 +39,41 @@ def change_df(df, motivation_df):
     motivation_df['date'] = date_list
     return counter, motivation_df
 
-counter, motivation_df = change_df(df, motivation_df)
+counter, motivation_df = create_counter(df, motivation_df)
 
 # 可視化範囲指定
 until = datetime.now()
-week_ago = until - relativedelta(days=7)
 since = until - relativedelta(years=1)
-date_range = st.sidebar.date_input("date range of tweet", value=[week_ago, until],
-                  min_value=since, max_value=until)
+date_range = st.sidebar.date_input("date range of tweet",
+                                    value= [until - relativedelta(days=7), until],
+                                    min_value=since, max_value=until)
 if len(date_range) < 2:
     st.warning('Select 2 days from sidebar')
     st.stop()
+
+date_span = (date_range[1] - date_range[0]).days
+if date_span <= 31:
+    dtick = '1D'
+elif 31 < date_span <= 60:
+    dtick = 3 * 86400000.0
+elif 60 < date_span < 120:
+    dtick = 7 * 86400000.0
+else:
+    dtick = '1M'
 
 # 可視化
 x_coord = motivation_df.loc[date_range[0]:date_range[1], :].index.tolist()
 y_coord = motivation_df.loc[date_range[0]:date_range[1], :].score.values.tolist()
 
-trace0 = go.Scatter(x = x_coord, y = y_coord, mode = 'lines', name = 'X')
+trace0 = go.Scatter(x = x_coord, y = y_coord, mode = 'lines + markers', name = 'X')
+# layout = go.Layout(yaxis=dict(range=[-1,1]), tickformat="%Y-%m-%d")
 
 fig = go.Figure(data=trace0)
 
 fig.update_layout(
             title = dict(text = 'motivation graph'),
-            xaxis = dict(title = 'date', type='date', dtick = 'M1'),  # dtick: 'M1'で１ヶ月ごとにラベル表示
-            yaxis = dict(title = 'motivation score'),
+            xaxis = dict(title = 'date', type='date', dtick = dtick, tickformat="%Y-%m-%d"),  # dtick: 'M1'で１ヶ月ごとにラベル表示
+            yaxis = dict(title = 'motivation score', range=[-1,1]),
             width=1000,
             height = 500
             )
@@ -94,6 +105,5 @@ st.write(f'Total_score:{round(total[0], 4)}')
 st.write(f'Status:  {sentiment_emoji(total[0])}')
 tweets = df[pd.to_datetime(df.index.date) == pd.to_datetime(d)]
 tweets = tweets.reset_index(drop=True)
-# ここのtextは前処理なしの文章(URLも含む)
-# scoreを出す際はURL除いてる
+# ここのtextは前処理なしの文章(URLも含む) scoreを出す際はURL除いてる
 st.table(tweets[['created_at', 'text', 'score']])

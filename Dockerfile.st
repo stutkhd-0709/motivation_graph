@@ -1,7 +1,4 @@
-FROM python:3.7
-USER root
-
-EXPOSE 8501
+FROM python:3.7-buster as builder
 
 WORKDIR /streamlit-docker
 
@@ -17,6 +14,20 @@ RUN git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git /mec
 COPY requirements_st.txt /streamlit-docker
 
 RUN pip install -r requirements_st.txt
+
+FROM python:3.7-slim-buster as runner
+
+COPY --from=builder /usr/local/lib/python3.7/site-packages /usr/local/lib/python3.7/site-packages
+COPY --from=builder /usr/local/bin/streamlit /usr/local/bin/streamlit
+COPY --from=builder /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
+
+ENV PATH $PATH:/usr/local/bin/streamlit
+
+WORKDIR /streamlit-docker
+
+USER root
+
+EXPOSE 8501
 
 CMD streamlit run app.py
 

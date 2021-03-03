@@ -16,8 +16,10 @@ if tw_id == '':
 
 @st.cache(allow_output_mutation=True)
 def create_motive_df(tw_id):
-    get_tweet.create_tw_csv(tw_id)
-    df = pd.read_csv('data/tweet.csv', encoding='utf8')
+    df, message = get_tweet.create_tw_df(tw_id)
+    if message != 'Success':
+        st.warning(message)
+        st.stop()
     # indexをdatetimeにする
     df['date'] = pd.to_datetime(df['date'])
     df.set_index('date', inplace=True)

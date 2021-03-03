@@ -16,13 +16,13 @@ auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 api = tweepy.API(auth, wait_on_rate_limit=True)
 
 def daterange(_start, _end):
-    for n in range((_end - _start).days):
+    for n in range(((_end+timedelta(days=1)) - _start).days):
+        if n == 366:
+            break
         datetime = _start + timedelta(n)
         yield cleaning.date_format(datetime)
 
-def create_tw_csv(tw_id):
-    if not os.path.exists('data'):
-        os.mkdir('data')
+def create_tw_df(tw_id):
     # tweet_idにすると自分のタイムラインしか取得できない
     tweets = tweepy.Cursor(api.user_timeline, count=200, \
                        screen_name=tw_id, \
@@ -31,13 +31,14 @@ def create_tw_csv(tw_id):
                        lang='ja').items()
     c = 0
     tweets_list, created_time_list = [], []
-    until = datetime.now()
+    until = datetime.now() + timedelta(hours=9) # 日本時刻に合わせる
     since = until - relativedelta(years=1)
+    message = ''
     try:
         for tw in tweets: # tweetsはgenerator
             created_at = tw.created_at + timedelta(hours=9)
             # 1年間のデータだけ取得
-            if created_at < since:
+            if created_at < since: # error
                 break
             # urlがある場合は除く(共有ツイートが多いため) 画像は含まれない
             if tw.entities['urls']:
@@ -59,11 +60,14 @@ def create_tw_csv(tw_id):
         tmp_df['date'] = tmp_df['created_at'].apply(cleaning.date_format)
         df = pd.concat([df, tmp_df])
         df = df.sort_values('created_at')
-        df.to_csv('data/tweet.csv', index=False)
         print(f'Total {c} tweets')
-        return 'Success'
+        message = 'Success'
+        return df, message
+
     except tweepy.error.TweepError as error:
         if '404' in str(error):
-            return 'そのIDは存在しません'
+            message = 'そのIDは存在しません'
+            return _, message
         elif '401' in str(error):
-            return 'アカウントに鍵がかかっています'
+            message = 'アカウントに鍵がかかっています'
+            return _, message

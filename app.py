@@ -14,7 +14,7 @@ if tw_id == '':
     st.warning("Input Tweeter ID")
     st.stop()
 
-@st.cache(allow_output_mutation=True)
+@st.cache(allow_output_mutation=True, suppress_st_warning=True)
 def create_motive_df(tw_id):
     df, message = get_tweet.create_tw_df(tw_id)
     if message != 'Success':

@@ -11,6 +11,7 @@ from utils import get_motivation, get_tweet, cleaning
 st.title('Create Motivation Graph')
 
 tw_id = st.sidebar.text_input('Input Tweeter ID')
+st.write('PROGRESS BAR')
 percentage = st.empty()
 progress_bar = st.progress(0)
 if tw_id == '':
@@ -119,7 +120,7 @@ fig.update_layout(
             title = dict(text = 'motivation graph'),
             xaxis = dict(title = 'date', type='date', dtick = dtick, tickformat="%Y-%m-%d"),  # dtick: 'M1'で１ヶ月ごとにラベル表示
             yaxis = dict(title = 'motivation score', range=[-1,1]),
-            width=1000,
+            width=900,
             height = 500
             )
 
@@ -140,6 +141,7 @@ def sentiment_emoji(score):
     elif 0.4 <= score < 0.7:
         return emoji_dict['exciting']
     else:
+        st.balloons()
         return emoji_dict['happy']
 
 # 選択した日付のテキストを表示

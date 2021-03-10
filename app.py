@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objs as go
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from asari.api import Sonar
 
@@ -89,7 +89,7 @@ def create_counter(df, motivation_df):
 counter, motivation_df = create_counter(df, motivation_df)
 
 # 可視化範囲指定
-until = datetime.now()
+until = datetime.now() + timedelta(hours=9)
 since = until - relativedelta(years=1)
 date_range = st.sidebar.date_input("date range of tweet",
                                     value= [until - relativedelta(days=7), until],
@@ -145,7 +145,7 @@ def sentiment_emoji(score):
         return emoji_dict['happy']
 
 # 選択した日付のテキストを表示
-d = st.sidebar.date_input('When Tweet',min_value=since, max_value=until)
+d = st.sidebar.date_input('When Tweet', value=until,min_value=since, max_value=until)
 st.write(f'{d}のツイート')
 total = motivation_df[pd.to_datetime(motivation_df.date) == pd.to_datetime(d)].score.tolist()
 st.write(f'Total_score:{round(total[0], 4)}')

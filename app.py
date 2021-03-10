@@ -1,21 +1,24 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objs as go
+import time
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from asari.api import Sonar
 
 from utils import get_motivation, get_tweet, cleaning
 
 st.title('Create Motivation Graph')
 
 tw_id = st.sidebar.text_input('Input Tweeter ID')
-
+percentage = st.empty()
+progress_bar = st.progress(0)
 if tw_id == '':
     st.warning("Input Tweeter ID")
     st.stop()
 
 @st.cache(allow_output_mutation=True, suppress_st_warning=True)
-def create_motive_df(tw_id):
+def get_tweet_df(tw_id):
     df, message = get_tweet.create_tw_df(tw_id)
     if message != 'Success':
         st.warning(message)
@@ -23,15 +26,56 @@ def create_motive_df(tw_id):
     # indexをdatetimeにする
     df['date'] = pd.to_datetime(df['date'])
     df.set_index('date', inplace=True)
-    motivation_df = get_motivation.day_motivation_df(df)
-    return df, motivation_df
+    df['clean_text'] = df['text'].map(cleaning.format_text)
+    df['clean_text'] = df['clean_text'].map(cleaning.normalize)
+    return df
 
+@st.cache(suppress_st_warning=True)
+def get_scores(text_list):
+    sonar = Sonar()
+    with st.spinner('Wait for API...'):
+        A = list(map(sonar.ping, text_list))
+    st.success('Done!')
+    scores = []
+    total = len(text_list)
+    count = 0
+    for res in A:
+        if res['text'] == ' ': #空白にもスコアが追加されてしまうため
+            scores.append(0)
+            count += 1
+            continue
+        label = res['top_class']
+        if label == 'negative':
+            index = 0
+            score = round(-1 * (res['classes'][index]['confidence']), 4)
+        else:
+            index = 1
+            score = round(res['classes'][index]['confidence'], 4)
+        scores.append(score)
+        # 四捨五入する
+        count += 1
+        percent = round((count/total) * 100)
+        percentage.text(f'Progress: {percent}%')
+        progress_bar.progress(percent)
+        time.sleep(0.001)
+    print('total:', total)
+    print('count:', count)
+    return scores
+
+@st.cache()
+def create_motivation_df(df, score_list):
+    df['score'] = score_list
+    motivation_df = df.resample("1D").mean()
+    return motivation_df
+
+df = get_tweet_df(tw_id)
+scores = get_scores(df['clean_text'].tolist())
 # motivation_df : index:datetime(日付のみ時間は9:00), score(total)
-df, motivation_df = create_motive_df(tw_id)
+motivation_df = create_motivation_df(df, scores)
 
 @st.cache(allow_output_mutation=True)
 def create_counter(df, motivation_df):
-    # # dfからその日のツイートを取得
+    # dfからその日のツイートを取得
     count_df = pd.DataFrame({'Timestamp':df.index, 'tweet':df.text})
     count_df['date'] = count_df['Timestamp'].apply(lambda x: '%d-%d-%d' % (x.year, x.month, x.day))
     count_df = count_df.reset_index(drop=True)

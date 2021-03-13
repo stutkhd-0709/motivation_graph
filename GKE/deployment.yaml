@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld-gke #これは何
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello
+  template:
+    metadata:
+      labels:
+        app: hello
+    spec:
+      containers:
+      - name: motivation-graph
+      # TODO: 環境変数をどう設定するのか調べる
+        # Replace $GCLOUD_PROJECT with your project ID
+        image: gcr.io/$GCLOUD_PROJECT/helloworld-gke:latest
+        # This app listens on port 8080 for web traffic by default.
+        ports:
+        - containerPort: 8080
+        env:
+          - name: PORT
+            value: "8080"

@@ -2,32 +2,6 @@ version: '3.7'
 
 services:
   dev:
-    container_name: motivation_graph
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - .:/work
-    env_file: .env
-    tty: True
-    networks:
-      - app-tier
-
-  get_tweet:
-    container_name: getter
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - .:/work
-    entrypoint:
-      - python
-      - utils/get_tweet.py
-    env_file: .env
-    networks:
-      - app-tier
-
-  app:
     container_name: motivation_app
     build:
       context: .

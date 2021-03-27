@@ -1,14 +1,19 @@
 import tweepy
 import pandas as pd
 import os
+from os.path import join, dirname
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
+from dotenv import load_dotenv
 from . import cleaning
 
-CONSUMER_KEY = os.getenv('CONSUMER_KEY')
-CONSUMER_SECRET = os.getenv('CONSUMER_SECRET')
-ACCESS_TOKEN = os.getenv('ACCESS_TOKEN')
-ACCESS_TOKEN_SECRET = os.getenv('ACCESS_TOKEN_SECRET')
+dotenv_path = '/streamlit-docker/.env' # 絶対パスじゃないとエラー出る
+load_dotenv(dotenv_path)
+
+CONSUMER_KEY = os.environ.get('CONSUMER_KEY')
+CONSUMER_SECRET = os.environ.get('CONSUMER_SECRET')
+ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN')
+ACCESS_TOKEN_SECRET = os.environ.get('ACCESS_TOKEN_SECRET')
 
 #tweepyの設定
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)

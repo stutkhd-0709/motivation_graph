@@ -41,6 +41,17 @@ services:
     networks:
       - app-tier
 
+  prd:
+    container_name: motivation_app_prd
+    build:
+      context: .
+      dockerfile: Dockerfile.prd
+    tty: True
+    ports:
+      - '8502:8501'
+    networks:
+      - app-tier
+
 networks:
   app-tier:
     driver: bridge

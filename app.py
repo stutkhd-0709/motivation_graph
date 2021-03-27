@@ -20,10 +20,12 @@ if tw_id == '':
 
 @st.cache(allow_output_mutation=True, suppress_st_warning=True)
 def get_tweet_df(tw_id):
-    df, message = get_tweet.create_tw_df(tw_id)
+    with st.spinner('Downloading Tweets...'):
+        df, message = get_tweet.create_tw_df(tw_id)
     if message != 'Success':
         st.warning(message)
         st.stop()
+    st.success("Finish!")
     # indexをdatetimeにする
     df['date'] = pd.to_datetime(df['date'])
     df.set_index('date', inplace=True)
@@ -63,16 +65,17 @@ def get_scores(text_list):
     print('count:', count)
     return scores
 
-@st.cache()
+@st.cache(allow_output_mutation=True)
 def create_motivation_df(df, score_list):
     df['score'] = score_list
-    motivation_df = df.resample("1D").mean()
-    return motivation_df
+    copy_df = df.copy()
+    motivation_df = copy_df.resample("1D").mean()
+    return df, motivation_df
 
 df = get_tweet_df(tw_id)
 scores = get_scores(df['clean_text'].tolist())
 # motivation_df : index:datetime(日付のみ時間は9:00), score(total)
-motivation_df = create_motivation_df(df, scores)
+df, motivation_df = create_motivation_df(df, scores)
 
 @st.cache(allow_output_mutation=True)
 def create_counter(df, motivation_df):

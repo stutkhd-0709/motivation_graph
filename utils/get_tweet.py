@@ -36,7 +36,7 @@ def create_tw_df(tw_id):
     message = ''
     try:
         for tw in tweets: # tweetsはgenerator
-            created_at = tw.created_at + timedelta(hours=9)
+            created_at = tw.created_at + timedelta(hours=9) # 日本時刻になっている
             # 1年間のデータだけ取得
             if created_at < since: # error
                 break
@@ -61,6 +61,8 @@ def create_tw_df(tw_id):
         df = pd.concat([df, tmp_df])
         df = df.sort_values('created_at')
         print(f'Total {c} tweets')
+        # sort_valueすると、時間が9時間進む
+        df['created_at'] = df['created_at'].apply(lambda x: x - timedelta(hours=9))
         message = 'Success'
         return df, message
 

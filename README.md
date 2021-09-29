@@ -8,7 +8,7 @@ Tweetから1年以内のあなたのモチベーションを可視化します�
 感情分析のスコアリングがボトルネックになっており、ツイートによってはかなり遅いです。  
 
 # Deploy Link
-https://share.streamlit.io/stutkhd/motivation_graph/app.py
+https://share.streamlit.io/stutkhd/motivation_graph/app.py  
 (streamlit deployのシステム上でgit cloneできないためneologdは使用してない)
 
 # Requirements

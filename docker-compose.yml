@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   dev:
-    container_name: motivation_app
+    container_name: motivation_graph
     build:
       context: .
       dockerfile: Dockerfile.st
@@ -16,7 +16,7 @@ services:
       - app-tier
 
   prd:
-    container_name: motivation_app_prd
+    container_name: motivation_graph_prd
     build:
       context: .
       dockerfile: Dockerfile.prd

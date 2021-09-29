@@ -6,14 +6,20 @@ from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
 from . import cleaning
+import streamlit as st
 
-dotenv_path = '/streamlit-docker/.env' # 絶対パスじゃないとエラー出る
-load_dotenv(dotenv_path)
+# dotenv_path = '/streamlit-docker/.env' # 絶対パスじゃないとエラー出る
+# load_dotenv(dotenv_path)
 
-CONSUMER_KEY = os.environ.get('CONSUMER_KEY')
-CONSUMER_SECRET = os.environ.get('CONSUMER_SECRET')
-ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN')
-ACCESS_TOKEN_SECRET = os.environ.get('ACCESS_TOKEN_SECRET')
+# CONSUMER_KEY = os.environ.get('CONSUMER_KEY')
+# CONSUMER_SECRET = os.environ.get('CONSUMER_SECRET')
+# ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN')
+# ACCESS_TOKEN_SECRET = os.environ.get('ACCESS_TOKEN_SECRET')
+
+CONSUMER_KEY = st.secrets['CONSUMER_KEY']
+CONSUMER_SECRET = st.secrets['CONSUMER_SECRET']
+ACCESS_TOKEN = st.secrets['ACCESS_TOKEN']
+ACCESS_TOKEN_SECRET = st.secrets['ACCESS_TOKEN_SECRET']
 
 #tweepyの設定
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)

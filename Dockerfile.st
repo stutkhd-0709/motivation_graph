@@ -11,9 +11,9 @@ RUN git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git /mec
     && update-alternatives --install /var/lib/mecab/dic/debian mecab-dictionary /var/lib/mecab/dic/mecab-ipadic-neologd 100 \
     && rm -rf /mecab-ipadic-neologd
 
-COPY requirements_st.txt /streamlit-docker
+COPY requirements.txt /streamlit-docker
 
-RUN pip install -r requirements_st.txt
+RUN pip install -r requirements.txt
 
 FROM python:3.7-slim-buster as runner
 
@@ -28,6 +28,8 @@ WORKDIR /streamlit-docker
 USER root
 
 EXPOSE 8501
+
+COPY .streamlit /streamlit-docker/.streamlit
 
 CMD streamlit run app.py
 

@@ -14,7 +14,7 @@ https://share.streamlit.io/stutkhd/motivation_graph/app.py
 # Requirements
  - python==3.7
  - mecab-python3==0.7
- - streamlit==0.77.0
+ - streamlit==0.89.0
  - pandas==1.2.2
  - plotly==4.14.3
  - requests_oauthlib==1.3.0

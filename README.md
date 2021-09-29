@@ -7,6 +7,10 @@ Tweetから1年以内のあなたのモチベーションを可視化します�
 また、選択した日付のツイートとそのツイートのモチベーションスコアも一覧で見ることができます。  
 感情分析のスコアリングがボトルネックになっており、ツイートによってはかなり遅いです。  
 
+# Deploy Link
+https://share.streamlit.io/stutkhd/motivation_graph/app.py
+(streamlit deployのシステム上でgit cloneできないためneologdは使用してない)
+
 # Requirements
  - python==3.7
  - mecab-python3==0.7

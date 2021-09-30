@@ -107,13 +107,15 @@ if len(date_range) < 2:
 
 date_span = (date_range[1] - date_range[0]).days
 if date_span <= 31:
-    dtick = '1D'
+    dtick = 'D'
 elif 31 < date_span <= 60:
     dtick = 3 * 86400000.0
-elif 60 < date_span < 120:
+elif 60 < date_span <= 120:
     dtick = 7 * 86400000.0
+elif 120 < date_span <= 180:
+    dtick = 'M1'
 else:
-    dtick = '1M'
+    dtick = 'M2'
 
 # 可視化
 x_coord = motivation_df.loc[date_range[0]:date_range[1], :].index.tolist()

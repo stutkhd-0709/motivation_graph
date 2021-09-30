@@ -81,7 +81,8 @@ def create_tw_df(tw_id):
     except tweepy.error.TweepError as error:
         if '404' in str(error):
             message = 'そのIDは存在しません'
-            return 'error', message
         elif '401' in str(error):
             message = 'アカウントに鍵がかかっています'
-            return 'error', message
+        else:
+            message = 'サーバーエラーです'
+        return 'error', message

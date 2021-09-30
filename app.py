@@ -21,32 +21,33 @@ if tw_id == '':
 @st.cache(allow_output_mutation=True, suppress_st_warning=True)
 def get_tweet_df(tw_id):
     with st.spinner('Downloading Tweets...'):
-        df, message = get_tweet.create_tw_df(tw_id)
+        tweet_df, message = get_tweet.create_tw_df(tw_id)
     if message != 'Success':
         st.warning(message)
         st.stop()
     st.success("Finish!")
     # indexをdatetimeにする
-    df['date'] = pd.to_datetime(df['date'])
-    df.set_index('date', inplace=True)
-    df['clean_text'] = df['text'].map(cleaning.format_text)
-    df['clean_text'] = df['clean_text'].map(cleaning.normalize)
-    return df
+    tweet_df['date'] = pd.to_datetime(tweet_df['date'])
+    tweet_df.set_index('date', inplace=True)
+    tweet_df['clean_text'] = tweet_df['text'].map(cleaning.format_text)
+    tweet_df['clean_text'] = tweet_df['clean_text'].map(cleaning.normalize)
+    return tweet_df
 
 @st.cache(suppress_st_warning=True)
-def get_scores(text_list):
+def get_sentiment_scores(text_list):
     sonar = Sonar()
-    with st.spinner('Wait for API...'):
-        A = list(map(sonar.ping, text_list))
+    with st.spinner('Wait for Scoring...'):
+        response_list = list(map(sonar.ping, text_list))
     st.success('Done!')
-    scores = []
+    sentiment_scores = []
     total = len(text_list)
     count = 0
-    for res in A:
+    for res in response_list:
         if res['text'] == ' ': #空白にもスコアが追加されてしまうため
-            scores.append(0)
+            sentiment_scores.append(0)
             count += 1
             continue
+
         label = res['top_class']
         if label == 'negative':
             index = 0
@@ -54,33 +55,36 @@ def get_scores(text_list):
         else:
             index = 1
             score = round(res['classes'][index]['confidence'], 4)
-        scores.append(score)
+        sentiment_scores.append(score)
+
         # 四捨五入する
         count += 1
         percent = round((count/total) * 100)
         percentage.text(f'Progress: {percent}%')
         progress_bar.progress(percent)
         time.sleep(0.001)
+
     print('total:', total)
     print('count:', count)
-    return scores
+    return sentiment_scores
 
 @st.cache(allow_output_mutation=True)
-def create_motivation_df(df, score_list):
-    df['score'] = score_list
-    copy_df = df.copy()
-    motivation_df = copy_df.resample("1D").mean()
-    return df, motivation_df
+def create_motivation_df(tweet_df, score_list):
+    copy_tweet_df = tweet_df.copy()
+    motivation_df = copy_tweet_df.resample("1D").mean()
+    return motivation_df
 
-df = get_tweet_df(tw_id)
-scores = get_scores(df['clean_text'].tolist())
+tweet_df = get_tweet_df(tw_id)
+sentiment_scores = get_sentiment_scores(tweet_df['clean_text'].tolist())
+tweet_df['score'] = sentiment_scores
+
 # motivation_df : index:datetime(日付のみ時間は9:00), score(total)
-df, motivation_df = create_motivation_df(df, scores)
+motivation_df = create_motivation_df(tweet_df, sentiment_scores) # indexの日付は正しい
 
 @st.cache(allow_output_mutation=True)
-def create_counter(df, motivation_df):
+def create_counter(tweet_df, motivation_df):
     # dfからその日のツイートを取得
-    count_df = pd.DataFrame({'Timestamp':df.index, 'tweet':df.text})
+    count_df = pd.DataFrame({'Timestamp':tweet_df.index, 'tweet':tweet_df.text})
     count_df['date'] = count_df['Timestamp'].apply(lambda x: '%d-%d-%d' % (x.year, x.month, x.day))
     count_df = count_df.reset_index(drop=True)
     # 日毎のツイート数
@@ -89,7 +93,7 @@ def create_counter(df, motivation_df):
     motivation_df['date'] = date_list
     return counter, motivation_df
 
-counter, motivation_df = create_counter(df, motivation_df)
+counter, motivation_df = create_counter(tweet_df, motivation_df)
 
 # 可視化範囲指定
 until = datetime.now() + timedelta(hours=9)
@@ -123,11 +127,9 @@ fig.update_layout(
             title = dict(text = 'motivation graph'),
             xaxis = dict(title = 'date', type='date', dtick = dtick, tickformat="%Y-%m-%d"),  # dtick: 'M1'で１ヶ月ごとにラベル表示
             yaxis = dict(title = 'motivation score', range=[-1,1]),
-            width=900,
-            height = 500
             )
 
-st.plotly_chart(fig)
+st.plotly_chart(fig , use_container_width=True)
 
 emoji_dict = {'painful':'😭', 'sad':'😢', 'pien': '🥺', 'usual':'😃', 'joy': '😁', 'exciting': '😆', 'happy':'✌😎✌️'}
 def sentiment_emoji(score):
@@ -148,12 +150,13 @@ def sentiment_emoji(score):
         return emoji_dict['happy']
 
 # 選択した日付のテキストを表示
-d = st.sidebar.date_input('When Tweet', value=until,min_value=since, max_value=until)
-st.write(f'{d}のツイート')
-total = motivation_df[pd.to_datetime(motivation_df.date) == pd.to_datetime(d)].score.tolist()
-st.write(f'Total_score:{round(total[0], 4)}')
-st.write(f'Status:  {sentiment_emoji(total[0])}')
-tweets = df[pd.to_datetime(df.index.date) == pd.to_datetime(d)]
+select_date = st.sidebar.date_input('When Tweet', value=until, min_value=since, max_value=until)
+st.write(f'{select_date}のツイート')
+total_score = motivation_df[pd.to_datetime(motivation_df.date) == pd.to_datetime(select_date)].score.tolist()
+st.write(f'Total_score:{round(total_score[0], 4)}')
+st.write(f'Status:  {sentiment_emoji(total_score[0])}')
+
+tweets = tweet_df[pd.to_datetime(tweet_df.index.date) == pd.to_datetime(select_date)]
 tweets = tweets.reset_index(drop=True)
 # ここのtextは前処理なしの文章(URLも含む) scoreを出す際はURL除いてる
 st.table(tweets[['created_at', 'text', 'score']])

@@ -40,7 +40,7 @@ def create_tw_df(tw_id):
                        include_rts=False, \
                        exclude_replies = True,\
                        lang='ja').items()
-    c = 0
+    tw_count = 0
     tweets_list, created_time_list = [], []
     until = datetime.now() + timedelta(hours=9) # 日本時刻に合わせる
     since = until - relativedelta(years=1)
@@ -56,24 +56,25 @@ def create_tw_df(tw_id):
                 continue
             created_time_list.append(created_at)
             tweets_list.append(tw.text)
-            if c % 100 == 0:
-                print(f'{c} Tweets Done')
-            c += 1
+            if tw_count % 100 == 0:
+                print(f'{tw_count} Tweets Done')
+            tw_count += 1
+
         df = pd.DataFrame(data={'text':tweets_list, 'created_at':created_time_list})
         df['date'] = df['created_at'].apply(cleaning.date_format)
-        # indexを補完する
-        lost_datetime = [] # datetime型
+
+        # 正規化で削除されたindexを補完する
+        losted_datetime = [] # datetime型
         tweets_date = set(df.date.tolist()) # 時間はなし
         for date in daterange(since, until):
             if date not in tweets_date:
-                lost_datetime.append(pd.to_datetime(date))
-        tmp_df = pd.DataFrame(lost_datetime, columns=['created_at'])
+                losted_datetime.append(pd.to_datetime(date))
+
+        tmp_df = pd.DataFrame(losted_datetime, columns=['created_at'])
         tmp_df['date'] = tmp_df['created_at'].apply(cleaning.date_format)
         df = pd.concat([df, tmp_df])
         df = df.sort_values('created_at')
-        print(f'Total {c} tweets')
-        # sort_valueすると、時間が9時間進む
-        df['created_at'] = df['created_at'].apply(lambda x: x - timedelta(hours=9))
+        print(f'Total {tw_count} tweets')
         message = 'Success'
         return df, message
 
